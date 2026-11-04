@@ -130,7 +130,7 @@ class TravelAgent:
 
             llm_start = time.perf_counter()
 
-            response = chat(
+            response = self.chat_client(
                 model="qwen3:8b",
                 messages=context,
                 tools=list(TOOLS.values()),
