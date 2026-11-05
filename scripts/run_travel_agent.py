@@ -20,5 +20,10 @@ def main():
 
         print(f"\nAI: {answer}\n")
 
+        print(
+            "Recorded Emails:",
+            agent.tool_executor.email_tool.sent_emails
+        )
+
 if __name__ == "__main__":
     main()

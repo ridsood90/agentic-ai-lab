@@ -4,6 +4,7 @@ import time
 
 from agentic_ai.tools.flight_tool import search_flights
 from agentic_ai.tools.hotel_tool import search_hotels
+from agentic_ai.tools.email_tool import MockEmailTool
 from agentic_ai.tools.tool_errors import RetryableToolError
 
 class FlightSearchInput(BaseModel):
@@ -12,6 +13,11 @@ class FlightSearchInput(BaseModel):
 class HotelSearchInput(BaseModel):
     city: str
 
+class EmailInput(BaseModel):
+    recipient: str
+    subject: str
+    body: str
+
 class ToolResult(BaseModel):
     success: bool
     data: Any = None
@@ -19,6 +25,8 @@ class ToolResult(BaseModel):
 
 class ToolExecutor:
     def __init__(self):
+        self.email_tool = MockEmailTool()
+        
         self.tools = {
             "search_flights": (
                 search_flights,
@@ -27,6 +35,10 @@ class ToolExecutor:
             "search_hotels": (
                 search_hotels,
                 HotelSearchInput
+            ),
+            "send_email": (
+                self.email_tool.send_email,
+                EmailInput
             )
         }
 

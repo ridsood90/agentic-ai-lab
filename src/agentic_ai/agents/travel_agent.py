@@ -14,7 +14,29 @@ from agentic_ai.observability.logger import get_logger
 
 TOOLS = {
     "search_flights": search_flights,
-    "search_hotels": search_hotels
+    "search_hotels": search_hotels,
+    "send_email": {
+        "type": "function",
+        "function": {
+            "name": "send_email",
+            "description": "Record a mock email. Never sends a real email.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "recipient": {
+                        "type": "string"
+                    },
+                    "subject": {
+                        "type": "string"
+                    },
+                    "body": {
+                        "type": "string"
+                    }
+                },
+                "required": ["recipient", "subject", "body"]
+            }
+        }
+    }
 }
 
 SYSTEM_MESSAGE = {
@@ -29,7 +51,7 @@ SYSTEM_MESSAGE = {
 }
 
 class TravelAgent:
-    def __init__(self, session_id: str, chat_client: None):
+    def __init__(self, session_id: str, chat_client=None):
         self.session_id = session_id
         self.chat_client = chat_client or chat
         self.store = ConversationStore()
