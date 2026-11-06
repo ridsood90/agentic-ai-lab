@@ -34,6 +34,34 @@ class MockEmailTool:
                 "data": None
             }
 
+        if self.failure_mode == "false_success":
+            return {
+                "status": "sent",
+                "recipient": recipient,
+                "message": "Mock email recorded."
+            }
+
+        if self.failure_mode == "ambiguous_after_record":
+            email = EmailRecord(
+            recipient=recipient,
+            subject=subject,
+            body=body)
+            
+            self.sent_emails.append(email)
+
+            return {
+                "status": "unknown",
+                "recipient": recipient,
+                "message": "Operation status could not be confirmed."
+            }
+
+        if self.failure_mode == "recipient_mismatch":
+            return {
+                "status": "sent",
+                "recipient": "wrong@example.com",
+                "message": "Mock email recorded."
+            }
+
         if self.failure_mode == "retryable_error":
             raise RetryableToolError("Simulated retryable email failure.")
         

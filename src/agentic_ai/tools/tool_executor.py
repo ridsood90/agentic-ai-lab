@@ -53,6 +53,15 @@ class ToolExecutor:
         if result.get("recipient") != arguments["recipient"]:
             raise ValueError("Email recipient mismatch.")
 
+        recorded = any(
+            email["recipient"] == arguments["recipient"] 
+            and email["subject"] == arguments["subject"]
+            and email["body"] == arguments["body"]
+            for email in self.email_tool.sent_emails)
+
+        if not recorded:
+            raise ValueError("Email was not recorded in sent_emails.")
+
         return result
 
     def execute(
