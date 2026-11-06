@@ -27,6 +27,13 @@ class MockEmailTool:
             }
         )
 
+        if self.failure_mode == "unexpected":
+            return {
+                "unexpected_field": "unknown",
+                "status": "completed",
+                "data": None
+            }
+
         if self.failure_mode == "retryable_error":
             raise RetryableToolError("Simulated retryable email failure.")
         

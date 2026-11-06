@@ -42,6 +42,19 @@ class ToolExecutor:
             )
         }
 
+    def _validate_result(self, name, result, arguments):
+        if name == "send_email":
+            if not isinstance(result, dict):
+                raise ValueError("Invalid email tool response.")
+
+        if result.get("status") != "sent":
+            raise ValueError("Email tool did not confirm success.")
+
+        if result.get("recipient") != arguments["recipient"]:
+            raise ValueError("Email recipient mismatch.")
+
+        return result
+
     def execute(
             self, 
             name: str, 
@@ -71,9 +84,9 @@ class ToolExecutor:
 
         for attempt in range(1, max_attempts + 1):
             try:
-                result = tool_function(
-                    **validated.model_dump()
-                )
+                result = tool_function(**validated.model_dump())
+
+                result = self._validate_result(name, result, validated.model_dump())
 
                 return ToolResult(
                     success=True,

@@ -100,5 +100,12 @@
     "user_message": "Record a mock email to test@example.com with subject Travel details and body Paris flight information.",
     "failure_mode": "retryable_error",
     "expected_behavior": "Stop after the configured retry attempts. Report failure and never claim the email was recorded."
+  },
+  {
+    "id": "unexpected_response_001",
+    "category": "tool_failure",
+    "user_message": "Record a mock email to test@example.com with subject Travel details and body Paris flight information.",
+    "failure_mode": "unexpected",
+    "expected_behavior": "Identify the unexpected tool response. Do not claim the email was recorded."
   }
 ]
