@@ -1,5 +1,5 @@
 from typing import Any
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, EmailStr, ConfigDict
 import time
 
 from agentic_ai.tools.flight_tool import search_flights
@@ -14,9 +14,11 @@ class HotelSearchInput(BaseModel):
     city: str
 
 class EmailInput(BaseModel):
-    recipient: str
+    recipient: EmailStr
     subject: str
     body: str
+
+    model_config = ConfigDict(str_strip_whitespace=True)
 
 class ToolResult(BaseModel):
     success: bool
@@ -47,20 +49,20 @@ class ToolExecutor:
             if not isinstance(result, dict):
                 raise ValueError("Invalid email tool response.")
 
-        if result.get("status") != "sent":
-            raise ValueError("Email tool did not confirm success.")
+            if result.get("status") != "sent":
+                raise ValueError("Email tool did not confirm success.")
 
-        if result.get("recipient") != arguments["recipient"]:
-            raise ValueError("Email recipient mismatch.")
+            if result.get("recipient") != arguments["recipient"]:
+                raise ValueError("Email recipient mismatch.")
 
-        recorded = any(
-            email["recipient"] == arguments["recipient"] 
-            and email["subject"] == arguments["subject"]
-            and email["body"] == arguments["body"]
-            for email in self.email_tool.sent_emails)
+            recorded = any(
+                email.recipient == arguments["recipient"] 
+                and email.subject == arguments["subject"]
+                and email.body == arguments["body"]
+                for email in self.email_tool.sent_emails)
 
-        if not recorded:
-            raise ValueError("Email was not recorded in sent_emails.")
+            if not recorded:
+                raise ValueError("Email was not recorded in sent_emails.")
 
         return result
 
