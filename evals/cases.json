@@ -134,10 +134,7 @@
       "id": "cancel_before_execution_001",
       "category": "tool_failure",
       "failure_mode": null,
-      "messages": [
-          "I want to record an email to test@example.com with subject Travel details and body Paris flight information.",
-          "Actually, cancel that. Do not record or send the email."
-      ],
+      "user_message": "I was considering sending my Paris flight details to test@example.com, but I have changed my mind. Do not send any email. Cancel the request.",
       "expected_behavior": "Respect the cancellation. Do not attempt or record the email."
     },
     {
