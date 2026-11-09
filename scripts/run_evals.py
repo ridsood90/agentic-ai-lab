@@ -1,12 +1,13 @@
 import json
 import uuid
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime
 
 from agentic_ai.agents.travel_agent import TravelAgent
 
 # Set to False to evaluate the model without the executor's result validation.
 VALIDATE_RESULTS = True
+REPETITIONS = 5
 
 
 def load_cases():
@@ -233,61 +234,111 @@ def run_evaluation(case):
     }   
 
 def main():
-    cases = load_cases()
-    print(f"Starting evaluation with {len(cases)} cases")
+    with open("evals/cases.json", "r") as file:
+        cases = json.load(file)
 
-    results = []
+    total_runs = len(cases) * REPETITIONS
+
+    print(f"Starting evaluation")
+    print(f"Test cases: {len(cases)}")
+    print(f"Repetitions: {REPETITIONS}")
+    print(f"Total evaluations: {total_runs}")
+    print(f"Validate results: {VALIDATE_RESULTS}")
 
     summary = {
         "PASS": 0,
         "FAIL": 0,
-        "NOT SCORED": 0
+        "NOT SCORED": 0,
+        "ERROR": 0
     }
 
-    for case in cases:
-        
-        try:
-            evaluation = run_evaluation(case)
-            status = evaluation["status"]
-            summary[status] += 1
-            results.append(evaluation)
-        
-        except Exception as error:
-            print(f"Evaluation error: {error}")
-            summary["ERROR"] += 1
-            results.append({
-                "case_id": case["id"],
-                "category": case["category"],
-                "status": "ERROR",
-                "error": str(error)
-            })
+    category_summary = {}
+    results = []
 
-    print("\n" + "=" * 40)
+    for repetition in range(1, REPETITIONS + 1):
+        print(f"\n{'=' * 60}")
+        print(f"REPETITION {repetition}/{REPETITIONS}")
+        print(f"{'=' * 60}")
+
+        for case in cases:
+            print(f"\nRunning: {case['id']}")
+
+            try:
+                result = run_evaluation(case)
+            except Exception as error:
+                result = {
+                    "case_id": case["id"],
+                    "category": case["category"],
+                    "status": "ERROR",
+                    "error": str(error)
+                }
+
+            result["repetition"] = repetition
+
+            status = result.get("status", "NOT SCORED")
+            category = result.get("category", case["category"])
+
+            if status not in summary:
+                status = "NOT SCORED"
+                result["status"] = status
+
+            summary[status] += 1
+
+            if category not in category_summary:
+                category_summary[category] = {
+                    "PASS": 0,
+                    "FAIL": 0,
+                    "NOT SCORED": 0,
+                    "ERROR": 0
+                }
+
+            category_summary[category][status] += 1
+            results.append(result)
+
+    pass_rate = (
+        summary["PASS"] / total_runs * 100
+        if total_runs else 0
+    )
+
+    print("\n" + "=" * 60)
     print("EVALUATION SUMMARY")
-    print("=" * 40)    
-    
+    print("=" * 60)
+
     for status, count in summary.items():
         print(f"{status}: {count}")
 
-    scored = summary["PASS"] + summary["FAIL"]
+    print(f"Total evaluations: {total_runs}")
+    print(f"Pass rate: {pass_rate:.1f}%")
 
-    if scored:
-        pass_rate = summary["PASS"] / scored * 100
-        print(f"Pass rate: {pass_rate:.1f}%")
+    print("\nCATEGORY SUMMARY")
+
+    for category, counts in category_summary.items():
+        print(f"\n{category}")
+        for status, count in counts.items():
+            print(f"  {status}: {count}")
 
     report = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now().isoformat(),
         "model": "qwen3:8b",
         "validate_results": VALIDATE_RESULTS,
+        "repetitions": REPETITIONS,
+        "total_cases": len(cases),
+        "total_runs": total_runs,
+        "pass_rate": round(pass_rate, 2),
         "summary": summary,
+        "category_summary": category_summary,
         "results": results
     }
 
-    report_path = Path("evals/results.json")
-    with report_path.open("w") as file:
-        json.dump(report, file, indent=2)
+    validation_label = str(VALIDATE_RESULTS).lower()
+    report_path = (
+        f"evals/results_validate_results_{validation_label}.json"
+    )
 
-    print(f"\nResults saved to: {report_path}")
+    with open(report_path, "w") as file:
+        json.dump(report, file, indent=4)
+
+    print(f"\nReport saved to: {report_path}")
 
 
 if __name__ == "__main__":
