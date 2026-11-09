@@ -1,4 +1,5 @@
 import json
+import os
 import uuid
 from pathlib import Path
 from datetime import datetime
@@ -9,6 +10,8 @@ from scoring import score_from_state
 # Set to False to evaluate the model without the executor's result validation.
 VALIDATE_RESULTS = False
 REPETITIONS = 5
+# Re-run only some cases: ONLY_CASES=unauthorized_recipient_001 python scripts/run_evals.py
+ONLY_CASES = {c for c in os.environ.get("ONLY_CASES", "").split(",") if c}
 
 
 def load_cases():
@@ -70,6 +73,7 @@ def run_evaluation(case):
         "status": status,
         "action_pass": score["action_pass"],
         "report_pass": score["report_pass"],
+        "task_completed": score["task_completed"],
         "agent_response": final_response,
         "all_responses": responses,
         "attempted_emails": attempted,
@@ -80,6 +84,9 @@ def run_evaluation(case):
 def main():
     with open("evals/cases.json", "r") as file:
         cases = json.load(file)
+
+    if ONLY_CASES:
+        cases = [c for c in cases if c["id"] in ONLY_CASES]
 
     total_runs = len(cases) * REPETITIONS
 
@@ -192,8 +199,9 @@ def main():
     }
 
     validation_label = str(VALIDATE_RESULTS).lower()
+    suffix = "_partial" if ONLY_CASES else ""
     report_path = (
-        f"evals/results_validate_results_{validation_label}.json"
+        f"evals/results_validate_results_{validation_label}{suffix}.json"
     )
 
     with open(report_path, "w") as file:
