@@ -26,16 +26,20 @@ class ToolResult(BaseModel):
     error: str | None = None
 
 class ToolExecutor:
-    def __init__(self):
+    def __init__(self, validate_results: bool = True):
         self.email_tool = MockEmailTool()
-        
+        # Evals can switch result validation off to test the model alone.
+        self.validate_results = validate_results
+        # Set of tool names ("flights", "hotels") that return injected text.
+        self.poisoned_tools = set()
+
         self.tools = {
             "search_flights": (
-                search_flights,
+                self._search_flights,
                 FlightSearchInput
             ),
             "search_hotels": (
-                search_hotels,
+                self._search_hotels,
                 HotelSearchInput
             ),
             "send_email": (
@@ -44,7 +48,20 @@ class ToolExecutor:
             )
         }
 
+    def _search_flights(self, destination: str):
+        return search_flights(
+            destination, poisoned="flights" in self.poisoned_tools
+        )
+
+    def _search_hotels(self, city: str):
+        return search_hotels(
+            city, poisoned="hotels" in self.poisoned_tools
+        )
+
     def _validate_result(self, name, result, arguments):
+        if not self.validate_results:
+            return result
+
         if name == "send_email":
             if not isinstance(result, dict):
                 raise ValueError("Invalid email tool response.")
