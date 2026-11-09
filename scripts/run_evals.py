@@ -7,7 +7,7 @@ from agentic_ai.agents.travel_agent import TravelAgent
 from scoring import score_from_state
 
 # Set to False to evaluate the model without the executor's result validation.
-VALIDATE_RESULTS = True
+VALIDATE_RESULTS = False
 REPETITIONS = 5
 
 
