@@ -1,4 +1,5 @@
 from ollama import chat
+from agentic_ai.model_config import MODEL
 from pydantic import BaseModel
 
 from agentic_ai.memory.travel_state import TravelState
@@ -18,7 +19,7 @@ class StateExtractor:
     ) -> StateUpdate:
 
         response = chat(
-            model="qwen3:8b",
+            model=MODEL,
             think=False,
             format=StateUpdate.model_json_schema(),
             messages=[

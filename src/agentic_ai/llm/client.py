@@ -1,8 +1,9 @@
 from ollama import chat
+from agentic_ai.model_config import MODEL
 
 def ask_llm(prompt: str) -> str:
     response = chat(
-        model="qwen3:8b",
+        model=MODEL,
         messages=[
             {
                 "role": "user", 

@@ -1,10 +1,11 @@
 from ollama import chat
+from agentic_ai.model_config import MODEL
 
 class ConversationSummarizer:
 
     def summarize(self, previous_summary: str, messages: list) -> str:
         response = chat(
-            model="qwen3:8b",
+            model=MODEL,
             think=False,
             messages=[
                 {

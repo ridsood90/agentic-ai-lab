@@ -1,0 +1,162 @@
+diff --git a/scripts/run_evals.py b/scripts/run_evals.py
+index d2704dd..49ee724 100644
+--- a/scripts/run_evals.py
++++ b/scripts/run_evals.py
+@@ -6,6 +6,7 @@ from datetime import datetime
+ 
+ from agentic_ai.agents.travel_agent import TravelAgent
+ from scoring import score_from_state
++from agentic_ai.model_config import MODEL, DEFAULT_MODEL
+ 
+ # Set to False to evaluate the model without the executor's result validation.
+ VALIDATE_RESULTS = True
+@@ -186,7 +187,7 @@ def main():
+ 
+     report = {
+         "timestamp": datetime.now().isoformat(),
+-        "model": "qwen3:8b",
++        "model": MODEL,
+         "validate_results": VALIDATE_RESULTS,
+         "repetitions": REPETITIONS,
+         "total_cases": len(cases),
+@@ -200,8 +201,14 @@ def main():
+ 
+     validation_label = str(VALIDATE_RESULTS).lower()
+     suffix = "_partial" if ONLY_CASES else ""
++    # Keep the original file names for the default model; other models get
++    # their own files so runs never overwrite each other.
++    model_part = (
++        "" if MODEL == DEFAULT_MODEL
++        else MODEL.replace(":", "-").replace("/", "-") + "_"
++    )
+     report_path = (
+-        f"evals/results_validate_results_{validation_label}{suffix}.json"
++        f"evals/results_{model_part}validate_results_{validation_label}{suffix}.json"
+     )
+ 
+     with open(report_path, "w") as file:
+diff --git a/src/agentic_ai/agents/travel_agent.py b/src/agentic_ai/agents/travel_agent.py
+index c8ad9b4..8162151 100644
+--- a/src/agentic_ai/agents/travel_agent.py
++++ b/src/agentic_ai/agents/travel_agent.py
+@@ -3,6 +3,7 @@ from unicodedata import name
+ from os import name
+ 
+ from ollama import chat
++from agentic_ai.model_config import MODEL
+ import time
+ import uuid
+ import re
+@@ -190,7 +191,7 @@ class TravelAgent:
+             llm_start = time.perf_counter()
+ 
+             response = self.chat_client(
+-                model="qwen3:8b",
++                model=MODEL,
+                 messages=context,
+                 tools=list(TOOLS.values()),
+                 think=False,
+diff --git a/src/agentic_ai/llm/client.py b/src/agentic_ai/llm/client.py
+index 93c08c8..76c74db 100644
+--- a/src/agentic_ai/llm/client.py
++++ b/src/agentic_ai/llm/client.py
+@@ -1,8 +1,9 @@
+ from ollama import chat
++from agentic_ai.model_config import MODEL
+ 
+ def ask_llm(prompt: str) -> str:
+     response = chat(
+-        model="qwen3:8b",
++        model=MODEL,
+         messages=[
+             {
+                 "role": "user", 
+diff --git a/src/agentic_ai/llm/conversation.py b/src/agentic_ai/llm/conversation.py
+index fc5056b..38e2988 100644
+--- a/src/agentic_ai/llm/conversation.py
++++ b/src/agentic_ai/llm/conversation.py
+@@ -1,4 +1,5 @@
+ from ollama import chat
++from agentic_ai.model_config import MODEL
+ 
+ 
+ class Conversation:
+@@ -12,7 +13,7 @@ class Conversation:
+         })
+ 
+         response = chat(
+-            model="qwen3:8b",
++            model=MODEL,
+             messages=self.messages
+         )
+ 
+diff --git a/src/agentic_ai/llm/structured_output.py b/src/agentic_ai/llm/structured_output.py
+index 48cc51c..dc1b913 100644
+--- a/src/agentic_ai/llm/structured_output.py
++++ b/src/agentic_ai/llm/structured_output.py
+@@ -1,4 +1,5 @@
+ from ollama import chat
++from agentic_ai.model_config import MODEL
+ from pydantic import BaseModel
+ 
+ 
+@@ -9,7 +10,7 @@ class FlightSearch(BaseModel):
+ 
+ def extract_flight_details(prompt: str) -> FlightSearch:
+     response = chat(
+-        model="qwen3:8b",
++        model=MODEL,
+         messages=[
+             {
+                 "role": "user",
+diff --git a/src/agentic_ai/memory/conversation_summarizer.py b/src/agentic_ai/memory/conversation_summarizer.py
+index 63db574..986d660 100644
+--- a/src/agentic_ai/memory/conversation_summarizer.py
++++ b/src/agentic_ai/memory/conversation_summarizer.py
+@@ -1,10 +1,11 @@
+ from ollama import chat
++from agentic_ai.model_config import MODEL
+ 
+ class ConversationSummarizer:
+ 
+     def summarize(self, previous_summary: str, messages: list) -> str:
+         response = chat(
+-            model="qwen3:8b",
++            model=MODEL,
+             think=False,
+             messages=[
+                 {
+diff --git a/src/agentic_ai/memory/state_extractor.py b/src/agentic_ai/memory/state_extractor.py
+index d951666..58c4cf2 100644
+--- a/src/agentic_ai/memory/state_extractor.py
++++ b/src/agentic_ai/memory/state_extractor.py
+@@ -1,4 +1,5 @@
+ from ollama import chat
++from agentic_ai.model_config import MODEL
+ from pydantic import BaseModel
+ 
+ from agentic_ai.memory.travel_state import TravelState
+@@ -18,7 +19,7 @@ class StateExtractor:
+     ) -> StateUpdate:
+ 
+         response = chat(
+-            model="qwen3:8b",
++            model=MODEL,
+             think=False,
+             format=StateUpdate.model_json_schema(),
+             messages=[
+diff --git a/src/agentic_ai/model_config.py b/src/agentic_ai/model_config.py
+new file mode 100644
+index 0000000..2203da7
+--- /dev/null
++++ b/src/agentic_ai/model_config.py
+@@ -0,0 +1,9 @@
++"""Single place that decides which Ollama model the agent uses.
++
++Override per run without editing code:
++    AGENT_MODEL=llama3.1:8b PYTHONPATH=src python scripts/run_evals.py
++"""
++import os
++
++DEFAULT_MODEL = "qwen3:8b"
++MODEL = os.environ.get("AGENT_MODEL", DEFAULT_MODEL)

@@ -1,4 +1,5 @@
 from ollama import chat
+from agentic_ai.model_config import MODEL
 
 
 class Conversation:
@@ -12,7 +13,7 @@ class Conversation:
         })
 
         response = chat(
-            model="qwen3:8b",
+            model=MODEL,
             messages=self.messages
         )
 

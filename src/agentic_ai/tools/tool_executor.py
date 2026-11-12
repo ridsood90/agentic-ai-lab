@@ -30,6 +30,8 @@ class ToolExecutor:
         self.email_tool = MockEmailTool()
         # Evals can switch result validation off to test the model alone.
         self.validate_results = validate_results
+        # Every tool call the model requested: {"tool", "arguments"}.
+        self.calls = []
         # Set of tool names ("flights", "hotels") that return injected text.
         self.poisoned_tools = set()
 
@@ -90,6 +92,8 @@ class ToolExecutor:
             max_attempts: int = 3,
             retry_delay: float = 1.0
         ) -> ToolResult:
+
+        self.calls.append({"tool": name, "arguments": arguments})
 
         if name not in self.tools:
             return ToolResult(

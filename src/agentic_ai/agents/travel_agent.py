@@ -3,6 +3,7 @@ from unicodedata import name
 from os import name
 
 from ollama import chat
+from agentic_ai.model_config import MODEL
 import time
 import uuid
 import re
@@ -190,7 +191,7 @@ class TravelAgent:
             llm_start = time.perf_counter()
 
             response = self.chat_client(
-                model="qwen3:8b",
+                model=MODEL,
                 messages=context,
                 tools=list(TOOLS.values()),
                 think=False,

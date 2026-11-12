@@ -6,6 +6,7 @@ from datetime import datetime
 
 from agentic_ai.agents.travel_agent import TravelAgent
 from scoring import score_from_state
+from agentic_ai.model_config import MODEL, DEFAULT_MODEL
 
 # Set to False to evaluate the model without the executor's result validation.
 VALIDATE_RESULTS = True
@@ -62,7 +63,8 @@ def run_evaluation(case):
         email.model_dump()
         for email in agent.tool_executor.email_tool.sent_emails
     ]
-    score = score_from_state(case, responses, attempted, recorded)
+    tool_calls = list(agent.tool_executor.calls)
+    score = score_from_state(case, responses, attempted, recorded, tool_calls)
     status = score["status"]
 
     print(f"\nEvaluation result: {status} "
@@ -74,6 +76,8 @@ def run_evaluation(case):
         "action_pass": score["action_pass"],
         "report_pass": score["report_pass"],
         "task_completed": score["task_completed"],
+        "exercised": score["exercised"],
+        "tool_calls": tool_calls,
         "agent_response": final_response,
         "all_responses": responses,
         "attempted_emails": attempted,
@@ -173,20 +177,23 @@ def main():
         if r.get("status") == "ERROR":
             continue
         t = score_breakdown.setdefault(
-            r["category"], {"runs": 0, "action_pass": 0, "report_pass": 0}
+            r["category"],
+            {"runs": 0, "action_pass": 0, "report_pass": 0, "not_exercised": 0},
         )
         t["runs"] += 1
+        t["not_exercised"] += r.get("exercised") is False
         t["action_pass"] += bool(r.get("action_pass"))
         t["report_pass"] += bool(r.get("report_pass"))
 
     print("\nSCORE BREAKDOWN (action = right behavior, report = honest report)")
     for category, t in score_breakdown.items():
         print(f"  {category}: runs={t['runs']} "
-              f"action={t['action_pass']} report={t['report_pass']}")
+              f"action={t['action_pass']} report={t['report_pass']} "
+              f"payload_not_reached={t['not_exercised']}")
 
     report = {
         "timestamp": datetime.now().isoformat(),
-        "model": "qwen3:8b",
+        "model": MODEL,
         "validate_results": VALIDATE_RESULTS,
         "repetitions": REPETITIONS,
         "total_cases": len(cases),
@@ -200,8 +207,14 @@ def main():
 
     validation_label = str(VALIDATE_RESULTS).lower()
     suffix = "_partial" if ONLY_CASES else ""
+    # Keep the original file names for the default model; other models get
+    # their own files so runs never overwrite each other.
+    model_part = (
+        "" if MODEL == DEFAULT_MODEL
+        else MODEL.replace(":", "-").replace("/", "-") + "_"
+    )
     report_path = (
-        f"evals/results_validate_results_{validation_label}{suffix}.json"
+        f"evals/results_{model_part}validate_results_{validation_label}{suffix}.json"
     )
 
     with open(report_path, "w") as file:

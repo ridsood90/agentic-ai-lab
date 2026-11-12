@@ -1,4 +1,5 @@
 from ollama import chat
+from agentic_ai.model_config import MODEL
 from pydantic import BaseModel
 
 
@@ -9,7 +10,7 @@ class FlightSearch(BaseModel):
 
 def extract_flight_details(prompt: str) -> FlightSearch:
     response = chat(
-        model="qwen3:8b",
+        model=MODEL,
         messages=[
             {
                 "role": "user",
