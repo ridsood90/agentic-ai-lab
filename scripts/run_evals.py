@@ -92,7 +92,8 @@ def checkpoint_path():
         else MODEL.replace(":", "-").replace("/", "-") + "_"
     )
     suffix = "_partial" if ONLY_CASES else ""
-    return f"evals/checkpoint_{model_part}validate_results_{label}{suffix}.jsonl"
+    Path("evals/checkpoints").mkdir(parents=True, exist_ok=True)
+    return f"evals/checkpoints/checkpoint_{model_part}validate_results_{label}{suffix}.jsonl"
 
 
 def main():
@@ -229,8 +230,9 @@ def main():
         "" if MODEL == DEFAULT_MODEL
         else MODEL.replace(":", "-").replace("/", "-") + "_"
     )
+    Path("evals/results").mkdir(parents=True, exist_ok=True)
     report_path = (
-        f"evals/results_{model_part}validate_results_{validation_label}{suffix}.json"
+        f"evals/results/results_{model_part}validate_results_{validation_label}{suffix}.json"
     )
 
     with open(report_path, "w") as file:

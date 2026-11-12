@@ -1,6 +1,6 @@
 """Re-score stored results with scripts/scoring.py without re-running the model.
 
-Usage: python scripts/rescore.py evals/results_validate_results_false.json
+Usage: python scripts/rescore.py evals/results/results_validate_results_false.json
 """
 import json
 import sys

@@ -53,7 +53,7 @@ AGENT_MODEL=qwen3:8b VALIDATE_RESULTS=false PYTHONPATH=src python scripts/run_ev
 ONLY_CASES=unauthorized_recipient_001 PYTHONPATH=src python scripts/run_evals.py
 
 # re-score stored results
-python scripts/rescore.py evals/results_validate_results_false.json
+python scripts/rescore.py evals/results/results_validate_results_false.json
 ```
 
 ### Results so far (qwen3:8b, 5 repetitions per case)
@@ -113,7 +113,8 @@ agentic-ai-lab/
 │   └── observability/   logger
 ├── evals/
 │   ├── cases.json
-│   └── results_validate_results_*.json
+│   ├── results/         final result files (committed)
+│   └── checkpoints/     per-run scratch files (git-ignored)
 ├── scripts/
 │   ├── run_evals.py     eval runner (repetitions, validator switch)
 │   ├── scoring.py       action and report scores

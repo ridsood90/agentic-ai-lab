@@ -6,6 +6,7 @@ set -u
 MODELS=${@:-"qwen3:8b mistral:latest"}
 mkdir -p logs
 for m in $MODELS; do
+  ollama show "$m" >/dev/null 2>&1 || { echo "Unknown model: $m"; exit 1; }
   for v in true false; do
     echo "== $m validate=$v =="
     AGENT_MODEL=$m VALIDATE_RESULTS=$v PYTHONPATH=src \

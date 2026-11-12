@@ -18,7 +18,7 @@ __pycache__/
 data/
 
 # Run checkpoints (kept only to recover from interrupted runs)
-evals/checkpoint_*.jsonl
+evals/checkpoints/
 
 # Logs
 logs/
