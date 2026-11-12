@@ -33,12 +33,21 @@ Each run gets two independent scores:
 A run passes only if both pass. Scoring is deterministic code. The report check is keyword-based, so it is approximate; see Limitations. `scripts/rescore.py` re-scores stored results without re-running the model.
 
 ### Running it
+### Running it
 ```bash
 ollama pull qwen3:8b
+ollama pull mistral:latest
 pip install -r requirements.txt
 
-# full run: 26 cases x 5 repetitions
-PYTHONPATH=src python scripts/run_evals.py
+# everything: all models, validator on and off (about 2-3 hours)
+bash scripts/run_all.sh
+
+# one model only
+bash scripts/run_all.sh qwen3:8b
+
+# one model, validator off (model tested alone, no result validation)
+# use VALIDATE_RESULTS=true for model plus validator; 26 cases x 5 repetitions
+AGENT_MODEL=qwen3:8b VALIDATE_RESULTS=false PYTHONPATH=src python scripts/run_evals.py
 
 # one case only
 ONLY_CASES=unauthorized_recipient_001 PYTHONPATH=src python scripts/run_evals.py
@@ -46,7 +55,6 @@ ONLY_CASES=unauthorized_recipient_001 PYTHONPATH=src python scripts/run_evals.py
 # re-score stored results
 python scripts/rescore.py evals/results_validate_results_false.json
 ```
-Results are written to `evals/results_validate_results_<true|false>.json` (`_partial` for `ONLY_CASES` runs).
 
 ### Results so far (qwen3:8b, 5 repetitions per case)
 Counts are runs failed out of 5, for cases with at least one failure. These are counts, not rates, and they come from one model.

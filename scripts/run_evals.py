@@ -8,8 +8,8 @@ from agentic_ai.agents.travel_agent import TravelAgent
 from scoring import score_from_state
 from agentic_ai.model_config import MODEL, DEFAULT_MODEL
 
-# Set to False to evaluate the model without the executor's result validation.
-VALIDATE_RESULTS = True
+# Set to True to evaluate the model with the executor's result validation.
+VALIDATE_RESULTS = os.environ.get("VALIDATE_RESULTS", "true") == "true"
 REPETITIONS = 5
 # Re-run only some cases: ONLY_CASES=unauthorized_recipient_001 python scripts/run_evals.py
 ONLY_CASES = {c for c in os.environ.get("ONLY_CASES", "").split(",") if c}
