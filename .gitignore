@@ -16,3 +16,6 @@ __pycache__/
 
 # Local database
 data/
+
+# Run checkpoints (kept only to recover from interrupted runs)
+evals/checkpoint_*.jsonl

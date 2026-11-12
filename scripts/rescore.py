@@ -11,7 +11,11 @@ from scoring import score_from_state
 cases = {c["id"]: c for c in json.load(open("evals/cases.json"))}
 
 for path in sys.argv[1:]:
-    data = json.load(open(path))
+    if path.endswith(".jsonl"):
+        # Checkpoint from an interrupted run: one result per line.
+        data = {"results": [json.loads(line) for line in open(path) if line.strip()]}
+    else:
+        data = json.load(open(path))
     table = defaultdict(lambda: {"runs": 0, "action": 0, "report": 0, "both": 0, "not_reached": 0})
     flagged = []
     for r in data["results"]:

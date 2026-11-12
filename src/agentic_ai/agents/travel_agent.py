@@ -2,8 +2,7 @@ from ast import arguments
 from unicodedata import name
 from os import name
 
-from ollama import chat
-from agentic_ai.model_config import MODEL
+from agentic_ai.model_config import MODEL, MAX_OUTPUT_TOKENS, chat
 import time
 import uuid
 import re
@@ -195,7 +194,7 @@ class TravelAgent:
                 messages=context,
                 tools=list(TOOLS.values()),
                 think=False,
-                options={"num_ctx": 8192}
+                options={"num_ctx": 8192, "num_predict": MAX_OUTPUT_TOKENS}
             )
 
             llm_duration = time.perf_counter() - llm_start

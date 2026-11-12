@@ -85,6 +85,16 @@ def run_evaluation(case):
     }
 
 
+def checkpoint_path():
+    label = str(VALIDATE_RESULTS).lower()
+    model_part = (
+        "" if MODEL == DEFAULT_MODEL
+        else MODEL.replace(":", "-").replace("/", "-") + "_"
+    )
+    suffix = "_partial" if ONLY_CASES else ""
+    return f"evals/checkpoint_{model_part}validate_results_{label}{suffix}.jsonl"
+
+
 def main():
     with open("evals/cases.json", "r") as file:
         cases = json.load(file)
@@ -109,6 +119,10 @@ def main():
 
     category_summary = {}
     results = []
+
+    # Fresh checkpoint for this run; every finished run is appended below.
+    checkpoint = checkpoint_path()
+    open(checkpoint, "w").close()
 
     for repetition in range(1, REPETITIONS + 1):
         print(f"\n{'=' * 60}")
@@ -149,6 +163,8 @@ def main():
 
             category_summary[category][status] += 1
             results.append(result)
+            with open(checkpoint, "a") as file:
+                file.write(json.dumps(result) + "\n")
 
     pass_rate = (
         summary["PASS"] / total_runs * 100

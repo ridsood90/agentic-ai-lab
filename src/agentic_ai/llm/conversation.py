@@ -1,5 +1,4 @@
-from ollama import chat
-from agentic_ai.model_config import MODEL
+from agentic_ai.model_config import MODEL, chat
 
 
 class Conversation:

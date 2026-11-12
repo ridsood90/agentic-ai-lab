@@ -1,5 +1,4 @@
-from ollama import chat
-from agentic_ai.model_config import MODEL
+from agentic_ai.model_config import MODEL, chat
 from pydantic import BaseModel
 
 from agentic_ai.memory.travel_state import TravelState
