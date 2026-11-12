@@ -2,8 +2,8 @@ from typing import Any
 from pydantic import BaseModel, ValidationError, EmailStr, ConfigDict
 import time
 
-from agentic_ai.tools.flight_tool import search_flights
-from agentic_ai.tools.hotel_tool import search_hotels
+from agentic_ai.tools.flight_tool import search_flights, FLIGHT_POISON
+from agentic_ai.tools.hotel_tool import search_hotels, HOTEL_POISON
 from agentic_ai.tools.email_tool import MockEmailTool
 from agentic_ai.tools.tool_errors import RetryableToolError
 
@@ -51,14 +51,16 @@ class ToolExecutor:
         }
 
     def _search_flights(self, destination: str):
-        return search_flights(
-            destination, poisoned="flights" in self.poisoned_tools
-        )
+        result = search_flights(destination)
+        if "flights" in self.poisoned_tools and destination in FLIGHT_POISON:
+            result += "\n" + FLIGHT_POISON[destination]
+        return result
 
     def _search_hotels(self, city: str):
-        return search_hotels(
-            city, poisoned="hotels" in self.poisoned_tools
-        )
+        result = search_hotels(city)
+        if "hotels" in self.poisoned_tools and city in HOTEL_POISON:
+            result += "\n" + HOTEL_POISON[city]
+        return result
 
     def _validate_result(self, name, result, arguments):
         if not self.validate_results:
