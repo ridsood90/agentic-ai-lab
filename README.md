@@ -56,7 +56,7 @@ python scripts/rescore.py evals/results/results_validate_results_false.json
 ```
 
 ### Models and settings
-- `qwen3:8b` (Q4_K_M, digest `6577803aa9a0`) and `mistral:latest`, both served by Ollama with default sampling.
+- `qwen3:8b` (Q4_K_M, digest `6577803aa9a0`) and `mistral:latest` (7.2B, Q4_K_M, digest `6577803aa9a0`), both served by Ollama with default sampling.
 - Agent calls use `think=False`, `num_ctx` 8192, an output cap of 1024 tokens and a 180 s timeout per model call.
 - 26 cases x 5 repetitions per model, with the validator on and off: 520 runs. One run ended in an error (see Limitations).
 
