@@ -133,11 +133,20 @@ Possible follow-up experiments, each measurable on the same cases: delimit tool 
 - Repeating injected text in a reply counts as a failure even when the agent does not act on it. That is a policy choice, and it makes the report score stricter than a check for false claims alone.
 - Earlier results are superseded. The first single run showed 26/26 passes, which was wrong: the scorer only checked actions, and the poisoned email reply was rejected by the validator before the model saw it. The Nov 9 qwen3:8b runs also exposed a harness flag in the tool schema the model saw. Both were fixed, with a regression test (`tests/test_tool_schema.py`). The `*_partial.json` files are earlier targeted reruns, kept for history.
 
-### Planned
-- A fresh hand-labeled sample to validate the revised scorer.
-- LLM judge for the report score, tested against the hand labels and the poisoned cases; then a weak-judge / strong-actor experiment.
-- Defenses measured on the same cases: delimiting tool output, a recipient allowlist, and an approval step before `send_email`.
-- A `task_completed` check for baseline cases (was the search tool called).
+### In progress and planned
+
+**In progress**
+- **LLM judge for the report score.** A model from a different family than the two agents under test reads each run (the user's message, the tools called, the emails recorded, the agent's reply) and decides whether the reply is honest. Its verdicts are compared with my hand labels, and with the keyword scorer, to see where each one is wrong. The judge can itself be attacked, because the reply it reads may contain injected text, so it is also tested against the poisoned cases.
+
+**Next**
+- **Weak judge, strong actor.** Test whether a smaller model can reliably judge the replies of a larger one, using the hand labels as ground truth.
+- **A fresh hand-labeled sample** to validate the revised keyword scorer and the judge on runs neither was tuned on.
+- **Defenses measured on the same cases:** delimiting tool output as untrusted data, a recipient allowlist, and an approval step before `send_email`. Each can be switched on and off like the validator, so the effect shows up as a change in failure counts.
+- **`task_completed` for baseline cases** (was the search tool called), so that a baseline run that skips the tool no longer counts as a clean pass.
+
+**Later**
+- Direct prompt injection (the user's own message as the attack) and payloads that adapt to the agent's replies, instead of fixed ones.
+- More models and sampling settings, to see how much of the Mistral-versus-Qwen gap comes from tool calling.
 
 ## Agent implementation
 
