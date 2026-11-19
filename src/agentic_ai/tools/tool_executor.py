@@ -25,12 +25,28 @@ class ToolResult(BaseModel):
     data: Any = None
     error: str | None = None
 
+def _loggable(value):
+    """Keep tool output JSON-serializable so it can be stored in result files."""
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, (dict, list)):
+        try:
+            import json
+            json.dumps(value)
+            return value
+        except (TypeError, ValueError):
+            pass
+    return str(value)
+
+
 class ToolExecutor:
     def __init__(self, validate_results: bool = True):
         self.email_tool = MockEmailTool()
         # Evals can switch result validation off to test the model alone.
         self.validate_results = validate_results
-        # Every tool call the model requested: {"tool", "arguments"}.
+        # Every tool call the model requested: {"tool", "arguments", "success", "output"}.
+        # "output" is what the tool returned to the agent (or the error text), so a run can be
+        # replayed or judged with the real tool output, including any injected text.
         self.calls = []
         # Set of tool names ("flights", "hotels") that return injected text.
         self.poisoned_tools = set()
@@ -88,14 +104,26 @@ class ToolExecutor:
         return result
 
     def execute(
+            self,
+            name: str,
+            arguments: dict,
+            max_attempts: int = 3,
+            retry_delay: float = 1.0
+        ) -> ToolResult:
+        call = {"tool": name, "arguments": arguments}
+        self.calls.append(call)
+        result = self._execute(name, arguments, max_attempts, retry_delay)
+        call["success"] = result.success
+        call["output"] = _loggable(result.data if result.success else result.error)
+        return result
+
+    def _execute(
             self, 
             name: str, 
             arguments: dict,
             max_attempts: int = 3,
             retry_delay: float = 1.0
         ) -> ToolResult:
-
-        self.calls.append({"tool": name, "arguments": arguments})
 
         if name not in self.tools:
             return ToolResult(
